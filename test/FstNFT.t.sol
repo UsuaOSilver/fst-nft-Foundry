@@ -11,16 +11,28 @@ contract NFTTest is Test {
     FstNFT public nft;
     
     address Alice = address(0x123);
-    address payable payee = payable(address(0xdc62));
+    address deployer = address(0x666);
     address receiver = address(0x456);
     address I333 = address(0x333);
     
     function setUp() public {
         //Deploy FstNFT contract
+        vm.startPrank(deployer);
+        vm.deal(deployer, 1 ether);
         nft = new FstNFT("FstNFT", "FST", "baseUri");
+        vm.stopPrank();
     }
     
-
+    // Test the contract is deployed successfully
+    function testDeployment() public {
+        assert(address(nft) == address(nft));
+    }
+    
+    // Test the deployed address is set to the owner
+    function testOwner() public {
+        assertEq(nft.owner(), deployer);
+    }
+    
     // No more than 100 NFTs can be minted
     function testFailedMaxSupplyReached() public {
         uint256 slot = stdstore
@@ -65,7 +77,7 @@ contract NFTTest is Test {
     // The owner can withdraw the funds collected from the sale
     function testWithdrawalWorksAsOwner() public {
         //Mint an NFT, sending eth to the contract
-        uint256 priorPayeeBalance = payee.balance;
+        uint256 priorBalance = deployer.balance;
         
         vm.startPrank(receiver);
         vm.deal(receiver, 0.02 ether);
@@ -77,29 +89,13 @@ contract NFTTest is Test {
         uint256 nftBalance = address(nft).balance;
         
         //Withdraw the balance and assert it was transferred        
-        vm.startPrank(payee);
-        vm.deal(payee, 0.02 ether);
-        nft.refund();
+        vm.startPrank(deployer);
+        nft.withdraw();
         vm.stopPrank();
         
-        assertEq(payee.balance, priorPayeeBalance + nftBalance);
+        assertEq(deployer.balance, priorBalance + nftBalance);
     }
-    
-    // function testWithdrawalFailsAsNotOwner() public {
-    //     // Mint an NFT and send eth to the contract
-    //     Receiver receiver = new Receiver();
-    //     nft.mintTo{value: nft.MINT_PRICE()}(address(receiver));
-        
-    //     //Check that the balance of the contract is correct
-    //     assertEq(address(nft).balance, nft.MINT_PRICE());
-        
-    //     //Confirm that a non-owner cannot withdraw
-    //     vm.expectRevert("Ownable: caller is not the owner");
-    //     vm.startPrank(address(0xd3ad));
-    //     nft.withdrawPayments(payable(address(0xd3ad)));
-    //     vm.stopPrank();
-    // }
-    
+
     // You can mint one token provided the correct amount of ETH.
     function testMintPricePaid() public {
         
