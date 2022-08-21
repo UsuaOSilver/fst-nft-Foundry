@@ -21,7 +21,11 @@ contract FstNFT is ERC721Enumerable, Ownable {
     
     string public URI;
     
-    constructor(string memory name, string memory symbol, string memory baseURI) ERC721(name, symbol) {
+    constructor(
+        string memory name, 
+        string memory symbol, 
+        string memory baseURI
+    ) ERC721(name, symbol) {
         URI = baseURI;
     }
     
@@ -47,6 +51,7 @@ contract FstNFT is ERC721Enumerable, Ownable {
     */
     function refund() public onlyOwner {
         uint balance = address(this).balance;
-        payable(msg.sender).transfer(balance);
+        (bool transferTx, ) = msg.sender.call{value: balance}("");
+        require(transferTx, "Failed to transfer funds");
     }
 }
