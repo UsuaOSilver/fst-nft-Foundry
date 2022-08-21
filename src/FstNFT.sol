@@ -49,7 +49,7 @@ contract FstNFT is ERC721Enumerable, Ownable {
     * Deployed address is set as “owner” upon deployment and can trigger refund function 
     * which will allow them to receive all the funds collected by the NFT contract from the sale. 
     */
-    function refund() public onlyOwner {
+    function withdraw() public onlyOwner {
         uint balance = address(this).balance;
         (bool transferTx, ) = msg.sender.call{value: balance}("");
         require(transferTx, "Failed to transfer funds");
